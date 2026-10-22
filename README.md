@@ -1,60 +1,54 @@
 # 知行笔记 · Zhixing Notes
 
-**开箱即用的 Obsidian 中文笔记库：随手记想法，在首页找回待办和待回顾的笔记。**
+**随手记下想法，清理收集箱，周末看看这一周留下了什么。**
 
-适合想开始用 Obsidian、又不想先研究插件和目录的人。收集箱、日记和 6 种模板都已配好，基础功能无需安装社区插件。
+给 Obsidian 用的中文笔记工作台。记录、整理和回顾放在一个入口，内容始终是本地 Markdown。
 
-**[下载笔记库](https://github.com/crown-sports/zhixing-notes/releases/latest/download/Zhixing-Notes.zip)** · [三分钟上手](vault/使用说明.md) · [English](README.en.md)
+**[下载体验库](https://github.com/crown-sports/zhixing-notes/releases/latest/download/Zhixing-Notes.zip)** · [已有库安装](plugins/review-workbench/README.md) · [English](README.en.md)
 
-![首页汇总散落在笔记里的待办和待回顾内容](docs/images/home.png)
+![知行工作台：快速记录、整理收集箱和本周回顾](docs/images/desk.png)
 
-*任务写在各自的笔记里，首页集中显示；点击结果就能回到原文。*
-
-| 你想做什么 | 打开后怎么用 |
+| 平时遇到的问题 | 在这里怎么做 |
 | --- | --- |
-| 先记下来，晚点整理 | 新笔记自动放进收集箱；日记已有当天的模板 |
-| 找到没做完的事 | 在笔记里写待办，首页自动汇总未完成项 |
-| 回头看看读过的内容 | 给笔记加 `#待回顾`，首页就能找到；看完移除标签 |
+| 想记一句话，不想先取标题、选目录 | **快速记录**，只写正文也能存进收集箱 |
+| 零散笔记越积越多，不知道怎么处理 | 看一条预览，**保留为笔记 / 变成项目 / 归档**；移错了能撤销 |
+| 到周末想回顾，却不知道从哪里开始 | **本周回顾**自动带入笔记链接；补写自己的总结，下次打开仍保留 |
 
-## 三分钟开始
+## 三分钟试一次
 
-先[安装 Obsidian](https://obsidian.md/download)。这里的“库”就是一个存放笔记的文件夹。
+1. [安装 Obsidian](https://obsidian.md/download)，下载并解压上面的 `Zhixing-Notes.zip`。
+2. 选择 **打开本地仓库**，打开包含 `00_开始.md` 的文件夹。在“设置 → 第三方插件 / 社区插件”启用 **知行工作台**。
+3. 点击左侧 **房子图标**，或按 **Ctrl / ⌘ + P** 搜索 **打开笔记工作台**。
 
-1. **[下载 Zhixing-Notes.zip](https://github.com/crown-sports/zhixing-notes/releases/latest/download/Zhixing-Notes.zip)** 并解压。用这个安装包，不用 GitHub 的 `Code → Download ZIP`。
-2. 在 Obsidian 选择 **打开本地仓库 / Open folder as vault**，选中包含 `00_开始.md` 的 `Zhixing-Notes` 文件夹。若出现信任提示，先以安全模式打开即可。
-3. 按 **Ctrl / ⌘ + N** 新建笔记，命名为“周末散步”，在正文粘贴：
-
-```markdown
-想走一条没去过的路线，拍几张照片。
-- [ ] 出门前给相机充电
-
-#待回顾
-```
-
-打开左侧的 **00_开始**：这条笔记会出现在“收集箱”，任务会出现在“还没做完”。点结果回到原笔记，勾选任务，再回首页——它就从未完成列表消失了。
-
-[日记、模板和常见问题 →](vault/使用说明.md)
-
-## 用熟之后再加插件
-
-| 可选工具 | 用处 |
-| --- | --- |
-| [回顾工作台](plugins/review-workbench/README.md) | 把读过的内容写成问题，遮住答案自测 |
-| [PDF 位置书签](plugins/pdf-location-bookmarks/README.md) | 保存当前页或章节，下次接着读（桌面实验功能） |
+点“快速记录”，写下“周末挑三张旅行照片”。保存后，在收集箱把它移为项目；试一次“撤销移动”。最后点“本周回顾”，写下你的下一步。
 
 <details>
-<summary>查看界面和启用方法</summary>
+<summary>看看生成的周回顾</summary>
 
-![回顾工作台：先回忆，再展开答案](docs/images/review-workbench.png)
-
-![PDF 位置书签：返回上次阅读的章节](docs/images/pdf-bookmark.png)
-
-安装包已包含两个插件，默认关闭。[按步骤启用 →](vault/插件说明.md)
-已有笔记库可下载[独立插件包](https://github.com/crown-sports/zhixing-notes/releases/latest)，无需替换原库配置。
+![周回顾自动带入笔记链接，保留自己补写的总结](docs/images/weekly-review.png)
 
 </details>
 
-笔记是本地 Markdown 文件，示例均为虚构，可删除。基础功能使用 Obsidian 核心插件；手机操作尚未实测，两个可选插件仅限桌面。[验证范围](docs/validation.md)
+不用插件也能用首页、日记和模板。[基础用法与常见问题 →](vault/使用说明.md)
+
+## 已经有自己的笔记库？
+
+只安装 [`review-workbench.zip`](https://github.com/crown-sports/zhixing-notes/releases/latest/download/review-workbench.zip)，在插件设置中选择自己的目录即可。原来的笔记和库配置都保留。[安装步骤 →](plugins/review-workbench/README.md)
+
+<details>
+<summary>还可以做什么？</summary>
+
+- **读完自测**：把内容写成问题和答案，在工作台点“回顾卡片”开始回忆。
+- **PDF 接着读**：可选启用“PDF 位置书签”，保存当前页或章节。
+- **日记与模板**：体验库已配好 6 种模板，基础用法只需要 Obsidian 核心功能。
+
+![回顾卡片](docs/images/review-workbench.png)
+
+[插件说明](vault/插件说明.md)
+
+</details>
+
+周回顾是生成时的快照，不自动重写。移动会保留内容，链接更新遵循 Obsidian 设置。插件仅支持桌面；PDF 书签属于实验功能。[验证范围](docs/validation.md)
 
 <details>
 <summary>开发与贡献</summary>
@@ -67,7 +61,7 @@ npm run check
 npm test
 ```
 
-安装包及校验和生成在 `dist/`。[贡献指南](CONTRIBUTING.md) · [README 设计参考](docs/readme-design.md)
+[贡献指南](CONTRIBUTING.md) · [产品研究与取舍](docs/product-decisions.md) · [README 设计参考](docs/readme-design.md)
 
 </details>
 

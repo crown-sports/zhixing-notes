@@ -1,5 +1,6 @@
 const { Plugin, ItemView, Modal, Notice, MarkdownRenderer, Component, setIcon, TFile, TFolder, PluginSettingTab, Setting } = require('obsidian');
 const { parseNote, summarize, filterRecords, scanMarkdown } = require('./data');
+const { installDesk, renderDeskSettings } = require('./desk');
 const MAIN = 'review-workbench-main';
 const SIDE = 'review-workbench-nav';
 const DEFAULT_SETTINGS = { folder: '20_笔记/回顾卡片' };
@@ -115,6 +116,17 @@ async function createReviewNote(vault, folder, values, date = new Date()) {
   }
   throw new Error('同名卡片过多，请修改标题后再试。');
 }
+function queueSettings(plugin, patch) {
+  const save = async () => {
+    const next = { folder: plugin.settings.folder, workflow: plugin.workflowSettings, ...patch };
+    await plugin.saveData(next);
+    plugin.settings = { folder: next.folder };
+    plugin.workflowSettings = next.workflow;
+  };
+  const result = (plugin.settingsSaveQueue || Promise.resolve()).then(save);
+  plugin.settingsSaveQueue = result.catch(() => {});
+  return result;
+}
 class CreateCardModal extends Modal {
   constructor(plugin) { super(plugin.app); this.plugin = plugin; }
   onOpen() {
@@ -148,7 +160,7 @@ class ReviewSettings extends PluginSettingTab {
   constructor(app, plugin) { super(app, plugin); this.owner = plugin; }
   display() {
     const root = this.containerEl; root.empty();
-    root.createEl('h2', { text: '回顾工作台' });
+    root.createEl('h2', { text: '知行工作台' });
     let folder = this.owner.settings.folder;
     new Setting(root).setName('卡片目录').setDesc('仅扫描此目录及子目录。保存设置不会移动现有笔记。')
       .addText(text => text.setPlaceholder(DEFAULT_SETTINGS.folder).setValue(folder).onChange(value => { folder = value; }))
@@ -157,6 +169,7 @@ class ReviewSettings extends PluginSettingTab {
         catch (error) { new Notice(error.message, 6000); }
       }));
     root.createEl('p', { text: '新建卡片和快速自测可直接使用。需要间隔排期时，可自行安装 Spaced Repetition；本插件不修改它的复习记录。' });
+    renderDeskSettings(root, this.owner);
   }
 }
 class AnalysisModal extends Modal {
@@ -422,6 +435,7 @@ module.exports = class ReviewWorkbench extends Plugin {
     this.settings = { ...DEFAULT_SETTINGS };
     const saved = await this.loadData();
     try { this.settings.folder = normalizeFolder(saved?.folder || DEFAULT_SETTINGS.folder); } catch (_) { new Notice('卡片目录配置无效，已使用默认目录。'); }
+    installDesk(this, saved?.workflow);
     this.addSettingTab(new ReviewSettings(this.app, this));
     this.addCommand({ id: 'new-card', name: '新建回顾卡', callback: () => new CreateCardModal(this).open() });
     this.records = []; this.stats = summarize([], today()); this.loading = true; this.loadError = ''; this.refreshId = 0;
@@ -446,14 +460,14 @@ module.exports = class ReviewWorkbench extends Plugin {
   onunload() { clearTimeout(this.refreshTimer); this.refreshId++; }
   folderPrefix() { return this.settings.folder + '/'; }
   categories() { return [...new Set(['概念', '方法', '实践', '其他', ...this.records.map(record => record.category)])]; }
+  updateSettings(patch) { return queueSettings(this, patch); }
   async setFolder(value) {
-    const settings = { folder: normalizeFolder(value) };
-    await this.saveData(settings); this.settings = settings;
+    await this.updateSettings({ folder: normalizeFolder(value) });
     const view = this.mainView(); if (view) { view.practice = null; view.route.selected = ''; }
     await this.refresh();
   }
-  mainView() { return this.app.workspace.getLeavesOfType(MAIN)[0]?.view; }
-  renderSidebar() { for (const leaf of this.app.workspace.getLeavesOfType(SIDE)) leaf.view.render(); }
+  mainView() { const view = this.app.workspace.getLeavesOfType(MAIN)[0]?.view; return view instanceof WorkbenchView ? view : undefined; }
+  renderSidebar() { for (const leaf of this.app.workspace.getLeavesOfType(SIDE)) if (leaf.view instanceof NavigationView) leaf.view.render(); }
   async refresh() {
     const id = ++this.refreshId;
     try {
@@ -465,14 +479,14 @@ module.exports = class ReviewWorkbench extends Plugin {
     } catch (error) { if (id !== this.refreshId) return; console.error('读取回顾卡片', error); this.loadError = '读取笔记时出现问题，请稍后重试。'; }
     if (id !== this.refreshId) return;
     this.loading = false;
-    for (const leaf of this.app.workspace.getLeavesOfType(MAIN)) { leaf.view.keepScroll = true; if (!leaf.view.practice) leaf.view.render(); }
+    for (const leaf of this.app.workspace.getLeavesOfType(MAIN)) { if (!(leaf.view instanceof WorkbenchView)) continue; leaf.view.keepScroll = true; if (!leaf.view.practice) leaf.view.render(); }
     this.renderSidebar();
   }
   async open(route) {
     let leaf = this.app.workspace.getLeavesOfType(MAIN)[0];
     if (!leaf) { leaf = this.app.workspace.getLeaf('tab'); await leaf.setViewState({ type: MAIN, active: true }); }
-    if (route) leaf.view.go(route);
     await this.app.workspace.revealLeaf(leaf);
+    if (route && leaf.view instanceof WorkbenchView) leaf.view.go(route);
     let side = this.app.workspace.getLeavesOfType(SIDE)[0];
     if (!side) { side = this.app.workspace.getLeftLeaf(false); if (side) await side.setViewState({ type: SIDE, active: true }); }
     this.app.workspace.leftSplit?.expand(); if (side) await this.app.workspace.revealLeaf(side);

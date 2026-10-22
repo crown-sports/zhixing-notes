@@ -11,14 +11,15 @@ const context = {
   module: { exports: {} },
   require(name) {
     if (name === './data') return data;
+    if (name === './desk') return { installDesk() {}, renderDeskSettings() {} };
     if (name === 'obsidian') return { Plugin: class {}, ItemView: class {}, Modal: class {}, PluginSettingTab: class {}, TFile, TFolder };
     throw new Error('Unexpected require ' + name);
   },
   Intl, Date, console
 };
 vm.createContext(context);
-vm.runInContext(fs.readFileSync(path.join(__dirname, 'main.src.js'), 'utf8') + '\nmodule.exports = { annotationBlock, buildAnnotation, updateAnnotation, normalizeFolder, buildReviewNote, createReviewNote, today };', context);
-const { annotationBlock, buildAnnotation, updateAnnotation, normalizeFolder, buildReviewNote, createReviewNote, today } = context.module.exports;
+vm.runInContext(fs.readFileSync(path.join(__dirname, 'main.src.js'), 'utf8') + '\nmodule.exports = { annotationBlock, buildAnnotation, updateAnnotation, normalizeFolder, buildReviewNote, createReviewNote, today, queueSettings };', context);
+const { annotationBlock, buildAnnotation, updateAnnotation, normalizeFolder, buildReviewNote, createReviewNote, today, queueSettings } = context.module.exports;
 const values = { title: '主动回忆', category: '读书', question: '为什么先回忆再核对？', answer: '先独立提取，再检查遗漏。' };
 
 function fakeVault() {
@@ -173,4 +174,25 @@ test('unsafe title characters stay inside the configured directory', async () =>
   const file = await createReviewNote(vault, 'cards', { ...values, title: '../other/path: lesson' });
   assert.equal(file.path.split('/').length, 2);
   assert.ok(file.path.startsWith('cards/'));
+});
+
+
+test('concurrent settings saves preserve both card and workflow directories', async () => {
+  let disk;
+  const plugin = { settings: { folder: 'cards' }, workflowSettings: { inbox: 'inbox' },
+    async saveData(value) { await new Promise(resolve => setTimeout(resolve, 3)); disk = JSON.parse(JSON.stringify(value)); }
+  };
+  await Promise.all([queueSettings(plugin, { folder: 'new-cards' }), queueSettings(plugin, { workflow: { inbox: 'new-inbox' } })]);
+  assert.deepEqual(disk, { folder: 'new-cards', workflow: { inbox: 'new-inbox' } });
+});
+
+test('failed settings write keeps memory unchanged and does not block the next save', async () => {
+  let fail = true;
+  const plugin = { settings: { folder: 'cards' }, workflowSettings: { inbox: 'inbox' },
+    async saveData() { if (fail) { fail = false; throw new Error('storage unavailable'); } }
+  };
+  await assert.rejects(queueSettings(plugin, { folder: 'lost' }), /storage/);
+  assert.equal(plugin.settings.folder, 'cards');
+  await queueSettings(plugin, { workflow: { inbox: 'next' } });
+  assert.equal(plugin.settings.folder, 'cards'); assert.equal(plugin.workflowSettings.inbox, 'next');
 });

@@ -1,9 +1,9 @@
 {
   "id": "review-workbench",
-  "name": "回顾工作台",
-  "version": "0.1.1",
+  "name": "知行工作台",
+  "version": "0.2.0",
   "minAppVersion": "1.6.0",
-  "description": "把普通 Markdown 笔记整理成回顾卡片：新建、筛选、自测和补充理解。",
+  "description": "快速记录、整理收集箱、生成本周回顾，也能用卡片自测。笔记始终保存在本地。",
   "author": "crown",
   "isDesktopOnly": true
 }

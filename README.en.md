@@ -1,56 +1,36 @@
 # Zhixing Notes
 
-**An Obsidian starter vault that brings scattered tasks and notes to revisit onto one home page.**
+**Capture a thought, clear your inbox, and look back on your week.**
 
-An inbox, daily notes and six templates, already configured. The basic workflow needs no community plugins. **The vault and plugin interfaces are in Chinese.**
+An Obsidian workbench for capture, organization and weekly review. Your notes stay in local Markdown. **The vault and plugin interfaces are in Chinese.**
 
-**[Download the vault](https://github.com/crown-sports/zhixing-notes/releases/latest/download/Zhixing-Notes.zip)** · [中文](README.md)
+**[Download the starter vault](https://github.com/crown-sports/zhixing-notes/releases/latest/download/Zhixing-Notes.zip)** · [中文](README.md)
 
-![Tasks and notes to revisit on the home page](docs/images/home.png)
+![The notes workbench with capture, inbox actions and weekly review](docs/images/desk.png)
 
-- **Capture now, sort later:** new notes go into the inbox.
-- **Find unfinished tasks:** write a checkbox in any note; the home page collects it.
-- **Revisit useful notes:** add `#待回顾` to a note, then remove the tag when done.
+- **Capture:** write a thought without choosing a title or folder.
+- **Organize:** preview inbox notes and move each to notes, projects or archive. Undo the most recent move.
+- **Review:** generate a weekly note with links to your inbox, tagged notes and recently modified notes. Reopening the same week preserves your writing.
 
-## Try it in three minutes
+## Try it
 
-1. [Install Obsidian](https://obsidian.md/download). Download and extract **Zhixing-Notes.zip** from the link above, rather than GitHub's source ZIP.
-2. Choose **Open folder as vault** and select the folder containing `00_开始.md`. If asked to trust the vault, open it in restricted mode to start.
-3. Press **Ctrl/Cmd + N**, name the note “Weekend walk”, and paste into its body:
+1. [Install Obsidian](https://obsidian.md/download), download and extract `Zhixing-Notes.zip`.
+2. Choose **Open folder as vault**, select the folder containing `00_开始.md`, then enable **知行工作台** in Community plugins.
+3. Click the house ribbon icon, or use Ctrl/Cmd + P and search for **打开笔记工作台**.
 
-```markdown
-Try a new walking route and take a few photos.
-- [ ] Charge the camera before leaving
+Capture “Pick three travel photos this weekend”, move it to Projects, try Undo, then open the weekly review and write your next step.
 
-#待回顾
-```
+Already have a vault? Install only [`review-workbench.zip`](https://github.com/crown-sports/zhixing-notes/releases/latest/download/review-workbench.zip), then choose your folders in plugin settings. Keep your existing vault configuration. The plugin ID remains `review-workbench` for upgrades from 0.1.x.
 
-Open **00_开始** in the file list. Find your note under “收集箱” (Inbox) and its task under “还没做完” (Unfinished). Open the task's source note, check it off, and return home: the task disappears from the unfinished list.
+The starter also works without community plugins using its Markdown home page, daily notes and templates. Optional card self-testing and PDF location bookmarks remain available.
 
-## Optional desktop plugins
-
-The download includes two plugins, disabled by default:
-
-- **Review Workbench:** write question/answer cards, then hide answers to test your recall.
-- **PDF Location Bookmarks:** save the current page or chapter and return to it. Experimental; uses internal Obsidian APIs.
-
-[Enable plugins](vault/插件说明.md) · [Standalone plugin downloads](https://github.com/crown-sports/zhixing-notes/releases/latest)
-
-Already have a vault? Try this one separately, then copy the templates you want. Keep your existing `.obsidian` configuration.
-
-Notes remain local Markdown files. Examples are fictional and can be removed. Mobile operation has not been tested; optional plugins are desktop-only. [Validation and limitations](docs/validation.md).
+Weekly reviews are link snapshots, not live reports. Link updates on file moves follow Obsidian settings. Plugins are desktop-only; PDF bookmarks use internal APIs and are experimental. [Validation and limitations](docs/validation.md).
 
 <details>
 <summary>Development</summary>
 
-Node 20+ and Python 3.9+; no project dependencies to install.
-
-```sh
-npm run package
-npm run check
-npm test
-```
+Node 20+, Python 3.9+, no project dependencies. Run `npm run package`, `npm run check`, `npm test`.
 
 </details>
 
-[Contributing](CONTRIBUTING.md) · [Changes](CHANGELOG.md) · [MIT](LICENSE) · [Credits](NOTICE)
+[Contributing](CONTRIBUTING.md) · [Changes](CHANGELOG.md) · [MIT](LICENSE)

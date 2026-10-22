@@ -1,8 +1,8 @@
 {
   "name": "zhixing-notes",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": true,
-  "description": "An Obsidian starter vault for capture, notes and review, with two optional local plugins.",
+  "description": "An Obsidian notes workbench: capture, organize your inbox, and review the week in local Markdown.",
   "license": "MIT",
   "engines": { "node": ">=20" },
   "scripts": {
