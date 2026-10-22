@@ -1,0 +1,10 @@
+{
+  "id": "pdf-location-bookmarks",
+  "name": "PDF 位置书签",
+  "version": "0.1.0",
+  "minAppVersion": "1.6.0",
+  "description": "在原生书签中收藏 PDF 文字选区、批注、阅读位置与目录位置。",
+  "author": "crown",
+  "authorUrl": "https://github.com/crown-sports",
+  "isDesktopOnly": true
+}

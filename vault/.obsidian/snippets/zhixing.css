@@ -1,0 +1,109 @@
+/* Optional home-page styling. Add cssclasses: [zhixing-home] to a note.
+   Colors follow the active Obsidian theme; regular notes keep their own styles. */
+
+.zhixing-home {
+  --file-line-width: 860px;
+}
+
+.zhixing-home :is(h1, .inline-title) {
+  color: var(--text-normal);
+  font-size: clamp(1.65rem, 4vw, 2.2rem);
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.zhixing-home h1 {
+  margin-block: 0.8em 0.55em;
+  padding-block-end: 0.4em;
+  border-block-end: 2px solid var(--interactive-accent);
+}
+
+.zhixing-home h2 {
+  margin-block: 1.65em 0.65em;
+  padding-block-end: 0.35em;
+  border-block-end: 1px solid var(--background-modifier-border);
+  color: var(--text-normal);
+  font-size: 1.25em;
+  line-height: 1.4;
+}
+
+.zhixing-home h3 {
+  margin-block: 1.2em 0.5em;
+  color: var(--text-normal);
+  font-size: 1.08em;
+}
+
+/* Keep editing-view colors aligned without changing CodeMirror line geometry. */
+.zhixing-home :is(.cm-header-1, .cm-header-2, .cm-header-3) {
+  color: var(--text-normal);
+  font-weight: 650;
+}
+
+.zhixing-home .callout {
+  margin-block: 1em;
+  padding: 0.9em 1em;
+  border-width: 1px;
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+.zhixing-home .callout-title {
+  gap: 0.55em;
+  font-weight: 650;
+}
+
+.zhixing-home .callout-title-inner {
+  overflow-wrap: anywhere;
+}
+
+.zhixing-home .callout-content {
+  line-height: 1.7;
+}
+
+.zhixing-home .callout-content > :first-child {
+  margin-block-start: 0.5em;
+}
+
+.zhixing-home .callout-content > :last-child {
+  margin-block-end: 0;
+}
+
+.zhixing-home a {
+  text-underline-offset: 0.2em;
+  overflow-wrap: anywhere;
+}
+
+.zhixing-home a:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+.zhixing-home :is(ul, ol) {
+  padding-inline-start: 1.5em;
+}
+
+.zhixing-home li + li {
+  margin-block-start: 0.35em;
+}
+
+.zhixing-home .el-table {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+@media (max-width: 600px) {
+  .zhixing-home h2 {
+    margin-block-start: 1.3em;
+  }
+
+  .zhixing-home .callout {
+    padding: 0.75em 0.8em;
+    border-radius: 8px;
+  }
+
+  .zhixing-home :is(ul, ol) {
+    padding-inline-start: 1.25em;
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "promptDelete": true,
+  "alwaysUpdateLinks": true,
+  "readableLineLength": true,
+  "showInlineTitle": false,
+  "newFileLocation": "folder",
+  "newFileFolderPath": "01_收集箱",
+  "attachmentFolderPath": "99_附件"
+}

@@ -1,0 +1,14 @@
+{
+  "name": "zhixing-notes",
+  "version": "0.1.0",
+  "private": true,
+  "description": "An Obsidian starter vault for capture, notes and review, with two optional local plugins.",
+  "license": "MIT",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "node tools/run.mjs build",
+    "test": "node tools/run.mjs test",
+    "check": "node tools/run.mjs check",
+    "package": "npm run build && node tools/run.mjs package"
+  }
+}

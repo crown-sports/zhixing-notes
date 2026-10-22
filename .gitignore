@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.qa/
+__pycache__/
+.DS_Store
+*.log
+.env*
+plugins/*/main.js
+vault/.obsidian/workspace*.json
+vault/.obsidian/bookmarks.json
+vault/.obsidian/graph.json
+vault/.obsidian/plugins/

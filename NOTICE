@@ -1,0 +1,14 @@
+Zhixing Notes / 知行笔记
+
+An independently maintained starter vault and two first-party plugins, adapted
+from the author's local Obsidian workflow. Original demonstration notes only.
+Obsidian itself, user notes, private settings and third-party plugin binaries
+are not distributed here.
+
+Obsidian: https://obsidian.md/
+Optional PDF++ integration: https://github.com/RyotaUshio/obsidian-pdf-plus
+Optional Spaced Repetition integration: https://github.com/st3v3nmw/obsidian-spaced-repetition
+
+These applications and plugins retain their own licenses. The project is not
+affiliated with or endorsed by Obsidian. Optional integrations do not reimplement
+upstream PDF rendering or spaced-repetition algorithms.
