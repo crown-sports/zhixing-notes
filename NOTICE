@@ -12,3 +12,7 @@ Optional Spaced Repetition integration: https://github.com/st3v3nmw/obsidian-spa
 These applications and plugins retain their own licenses. The project is not
 affiliated with or endorsed by Obsidian. Optional integrations do not reimplement
 upstream PDF rendering or spaced-repetition algorithms.
+
+The original floating-library illustration in plugins/review-workbench/assets/
+quest-world.png was generated with OpenAI image generation for this project.
+No Habitica, LifeUp, or third-party game art is bundled.

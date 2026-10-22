@@ -1,6 +1,8 @@
 'use strict';
 const { ItemView, Modal, Notice, Setting, TFolder, setIcon, getAllTags } = require('obsidian');
 const { DEFAULT_WORKFLOW, validateWorkflowSettings, localDate, weekRange, templateFolder, createCapture, moveInboxNote, undoMove, createWeeklyReview } = require('./workflow');
+const { normalizeJourney, recordJourney, undoJourneyMove, journeyStatus, saveReflection } = require('./journey');
+const HERO_IMAGE = '__ZHIXING_HERO_DATA_URL__';
 const DESK = 'zhixing-notes-desk';
 const inside = (path, folder) => path.startsWith(folder + '/');
 const FOLDERS = [['inbox', '收集箱'], ['notes', '长期笔记'], ['projects', '项目'], ['archive', '归档'], ['weekly', '每周回顾']];
@@ -56,7 +58,9 @@ class CaptureModal extends Modal {
         this.saving = false;
         title.disabled = body.disabled = cancel.disabled = false;
       }
-      this.close(); this.plugin.refreshDesk();
+      this.close();
+      await this.plugin.completeJourney?.('capture', { path: file.path });
+      this.plugin.refreshDesk();
       new Notice('已保存：' + file.basename);
     }, true);
     this.shortcuts = [
@@ -71,6 +75,51 @@ class CaptureModal extends Modal {
     this.contentEl.empty();
   }
 }
+class ReflectionModal extends CaptureModal {
+  onOpen() {
+    this.setTitle('留下一句本周收获');
+    this.contentEl.addClass('zn-capture');
+    this.contentEl.createEl('p', { cls: 'zn-muted', text: '什么值得留下？至少写 10 个字，会追加到本周回顾里。' });
+    const label = this.contentEl.createEl('label', { cls: 'zn-field', text: '写给下次打开笔记的自己' });
+    const body = label.createEl('textarea', { attr: { rows: '6', maxlength: '4000', placeholder: '例如：把整理相册拆成“先挑三张照片”，比一直等有空更容易开始。' } });
+    const error = this.contentEl.createDiv({ cls: 'zn-error', attr: { role: 'alert' } });
+    body.addEventListener('input', () => error.empty());
+    const controls = this.contentEl.createDiv({ cls: 'zn-actions' });
+    const cancel = action(controls, '再想一想', () => this.close());
+    let existingFile;
+    const recover = action(controls, '复制草稿并打开回顾', async () => {
+      if (!existingFile || this.saving) return;
+      this.saving = true; body.disabled = cancel.disabled = save.disabled = true;
+      try { await navigator.clipboard.writeText(body.value); }
+      finally { this.saving = false; body.disabled = cancel.disabled = save.disabled = false; }
+      this.close(); await openFile(this.plugin, existingFile);
+      new Notice('草稿已复制，可以粘贴到原回顾中继续编辑。');
+    });
+    recover.hidden = true;
+    const save = action(controls, '保存收获，点亮星章', async () => {
+      if (this.saving) return;
+      this.saving = true; body.disabled = cancel.disabled = recover.disabled = true; error.empty();
+      const date = new Date();
+      let result, recorded;
+      try {
+        result = await saveReflection(this.app, this.plugin.workflowSettings, body.value, date);
+        recorded = await this.plugin.completeJourney('reflect', { path: result.file.path }, date);
+      }
+      catch (e) { error.setText(e.message || '保存失败，内容还在这里。'); return; }
+      finally { this.saving = false; body.disabled = cancel.disabled = recover.disabled = false; }
+      this.plugin.refreshDesk();
+      if (!result.created) {
+        existingFile = result.file; recover.hidden = false;
+        error.setText('本周已有收获，这段新草稿尚未保存。可以复制后在原文中补充。');
+        return;
+      }
+      this.close();
+      new Notice(recorded ? '本周收获已保存，回顾星章已点亮。' : '本周收获已保存；进度保存失败，稍后可以重试。');
+      await openFile(this.plugin, result.file);
+    }, true);
+    this.shortcuts = [this.scope.register(['Mod'], 'Enter', () => { if (!save.disabled) save.click(); return false; }), this.scope.register([], 'Escape', () => { this.close(); return false; })];
+  }
+}
 class DeskView extends ItemView {
   constructor(leaf, plugin) { super(leaf); this.plugin = plugin; this.tab = 'inbox'; this.query = ''; this.limit = 20; this.renderId = 0; }
   getViewType() { return DESK; }
@@ -81,17 +130,32 @@ class DeskView extends ItemView {
   shell() {
     const root = this.contentEl; root.empty();
     root.setAttribute('aria-label', '知行工作台');
+    const top = root.createDiv({ cls: 'zn-topbar' });
+    const brand = top.createDiv({ cls: 'zn-brand' });
+    setIcon(brand.createSpan({ cls: 'zn-brand-mark' }), 'compass');
+    brand.createSpan({ text: '知行 · 灵感远征' });
+    const tools = top.createDiv({ cls: 'zn-actions' });
+    action(tools, '回顾卡片', () => this.plugin.open());
+    this.modeButton = action(tools, '专注模式', async () => {
+      await this.plugin.updateSettings(current => ({ journey: { ...normalizeJourney(current.journey), mode: normalizeJourney(current.journey).mode === 'focus' ? 'adventure' : 'focus' } }));
+      this.plugin.refreshDesk();
+    });
     const header = root.createDiv({ cls: 'zn-header' });
-    const intro = header.createDiv();
+    const art = header.createDiv({ cls: 'zn-world', attr: { 'aria-hidden': 'true' } });
+    art.style.backgroundImage = 'url("' + HERO_IMAGE + '")';
+    const intro = header.createDiv({ cls: 'zn-hero-copy' });
     this.dateEl = intro.createDiv({ cls: 'zn-eyebrow', text: '知行笔记 / ' + localDate(new Date()) });
-    intro.createEl('h1', { text: '今天先记下来' });
-    intro.createEl('p', { cls: 'zn-muted', text: '有空时整理一条，周末再看看留下了什么。' });
-    const buttons = header.createDiv({ cls: 'zn-actions' });
+    this.titleEl = intro.createEl('h1', { text: '让灵感，\n成为你的下一站。' });
+    this.subtitleEl = intro.createEl('p', { cls: 'zn-muted', text: '每记下一点，每整理一页，都离自己的答案更近。' });
+    const buttons = intro.createDiv({ cls: 'zn-actions zn-hero-actions' });
     action(buttons, '＋ 快速记录', () => new CaptureModal(this.plugin).open(), true);
     action(buttons, '本周回顾', () => this.plugin.openWeekly());
-    action(buttons, '回顾卡片', () => this.plugin.open());
+    this.progressEl = header.createDiv({ cls: 'zn-journey-progress', attr: { 'aria-live': 'polite' } });
+    this.journeyEl = root.createDiv({ cls: 'zn-journey' });
     this.noticeEl = root.createDiv({ cls: 'zn-notice', attr: { 'aria-live': 'polite' } });
-    this.statsEl = root.createDiv({ cls: 'zn-stats' });
+    const library = root.createDiv({ cls: 'zn-library-heading' });
+    library.createEl('h2', { text: '我的笔记' });
+    this.statsEl = library.createDiv({ cls: 'zn-stats' });
     const toolbar = root.createDiv({ cls: 'zn-toolbar' });
     this.tabsEl = toolbar.createDiv({ cls: 'zn-tabs', attr: { role: 'group', 'aria-label': '笔记范围' } });
     this.tabButtons = {};
@@ -105,9 +169,51 @@ class DeskView extends ItemView {
     this.hintEl = root.createEl('p', { cls: 'zn-muted' });
     this.listEl = root.createDiv({ cls: 'zn-list', attr: { 'aria-live': 'polite' } });
     const footer = root.createDiv({ cls: 'zn-footer' });
-    footer.createSpan({ text: '笔记仍是本地 Markdown。文件移动可在本次会话内撤销。' });
+    footer.createSpan({ text: '本地 Markdown · 随时可以停下，下次接着走。' });
     action(footer, '重新读取', () => this.refresh());
     action(footer, '使用方法', () => this.showHelp());
+  }
+  renderJourney() {
+    const state = journeyStatus(this.plugin.journey, new Date());
+    const focus = normalizeJourney(this.plugin.journey).mode === 'focus';
+    this.contentEl.toggleClass('zn-focus', focus);
+    this.modeButton.setText(focus ? '探索模式' : '专注模式');
+    this.modeButton.setAttribute('aria-pressed', String(focus));
+    this.titleEl.setText(focus ? '今天先记下来' : '让灵感，\n成为你的下一站。');
+    this.subtitleEl.setText(focus ? '有空时整理一条，周末再看看留下了什么。' : '每记下一点，每整理一页，都离自己的答案更近。');
+    this.progressEl.empty();
+    this.progressEl.createDiv({ cls: 'zn-progress-label', text: '本周星章' });
+    const stars = this.progressEl.createDiv({ cls: 'zn-stars', attr: { 'aria-label': '已点亮 ' + state.done + ' 枚，共 3 枚星章' } });
+    for (const key of ['capture', 'organize', 'reflect']) { const star = stars.createSpan({ cls: state.steps[key] ? 'is-lit' : '' }); setIcon(star, 'star'); }
+    this.progressEl.createSpan({ cls: 'zn-progress-count', text: state.done + ' / 3' });
+    this.journeyEl.empty();
+    const heading = this.journeyEl.createDiv({ cls: 'zn-journey-heading' });
+    heading.createEl('h2', { text: state.done === 3 ? '本周旅程已完成' : '本周旅程' });
+    heading.createSpan({ text: state.start.slice(5) + ' — ' + state.end.slice(5) + ' · 每关一枚星章，可自由选择顺序' });
+    const route = this.journeyEl.createDiv({ cls: 'zn-route' });
+    const stages = [
+      { key: 'capture', icon: 'feather', place: '拾光林地', title: '记下一束灵感', detail: '保存一条自己的想法。', button: '开始记录', run: () => new CaptureModal(this.plugin).open() },
+      { key: 'organize', icon: 'compass', place: '整理工坊', title: '给笔记一个去处', detail: '从收集箱整理出一篇。', button: '去整理', run: () => {
+        this.tab = 'inbox'; this.query = ''; this.search.value = ''; this.limit = 20; this.renderList();
+        this.listEl.scrollIntoView({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
+        if (!this.groups.inbox.length) new Notice('收集箱是空的，可以先快速记录一条想法。');
+      } },
+      { key: 'reflect', icon: 'telescope', place: '回望灯塔', title: '留下一句收获', detail: '写给下次打开笔记的自己。', button: '写一句回顾', run: () => state.steps.reflect ? this.plugin.openWeekly() : new ReflectionModal(this.plugin).open() }
+    ];
+    const current = stages.find(stage => !state.steps[stage.key])?.key;
+    for (const [i, stage] of stages.entries()) {
+      const done = state.steps[stage.key];
+      const card = route.createEl('article', { cls: 'zn-stage' + (done ? ' is-complete' : stage.key === current ? ' is-current' : '') });
+      if (this.plugin.lastJourneyAward?.kind === stage.key && Date.now() - this.plugin.lastJourneyAward.at < 1800) card.addClass('is-awarded');
+      const seal = card.createDiv({ cls: 'zn-stage-seal' }); setIcon(seal, done ? 'check' : stage.icon);
+      card.createDiv({ cls: 'zn-stage-label', text: '0' + (i + 1) + ' / ' + stage.place });
+      card.createEl('h3', { text: stage.title });
+      card.createEl('p', { text: stage.detail });
+      const bottom = card.createDiv({ cls: 'zn-stage-bottom' });
+      bottom.createSpan({ cls: 'zn-stage-state', text: done ? '✦ 已点亮' : stage.key === current ? '当前关卡' : '尚未点亮' });
+      action(bottom, done ? stage.key === 'reflect' ? '查看收获' : '再走一程' : stage.button, stage.run, !done && stage.key === current);
+    }
+    if (state.done === 3) this.journeyEl.createDiv({ cls: 'zn-completion', text: '✦ 记录、整理、回顾，都有了自己的痕迹。下周再出发。' });
   }
   showHelp() {
     const modal = new Modal(this.app); modal.setTitle('从记录到回顾');
@@ -119,6 +225,7 @@ class DeskView extends ItemView {
       '本周回顾：生成当前收集箱、待回顾和本周修改笔记的链接快照。同一周再次点击只打开已有记录，不覆盖你的文字。每周从本地时间的周一开始。',
       '使用已有库：在设置 → 知行工作台中选择自己的目录。不需要复制示例库，也不会替换原库设置。'
     ]) list.createEl('li', { text });
+    list.createEl('li', { text: '每周旅程：成功保存记录、整理一篇、保存至少 10 字的收获，各点亮一枚星章。打开页面不计进度；撤销对应整理会熄灭该星章。进度只存在本地插件配置，专注模式可以收起地图。' });
     action(modal.contentEl, '开始记录', () => { modal.close(); new CaptureModal(this.plugin).open(); }, true);
     modal.open();
   }
@@ -134,6 +241,7 @@ class DeskView extends ItemView {
         recent: all.filter(f => !excluded(f) && [s.inbox, s.notes, s.projects].some(folder => inside(f.path, folder)) && f.stat.mtime >= range.fromMs && f.stat.mtime < range.toMs)
       };
       for (const list of Object.values(this.groups)) list.sort((a, b) => b.stat.mtime - a.stat.mtime || a.path.localeCompare(b.path, 'zh-CN'));
+      this.renderJourney();
       this.statsEl.empty();
       for (const [key, label] of [['inbox', '条待整理'], ['review', '篇待回顾'], ['recent', '篇本周修改']]) {
         const tile = action(this.statsEl, '', () => { this.tab = key; this.query = ''; this.search.value = ''; this.limit = 20; this.renderList(); });
@@ -154,6 +262,7 @@ class DeskView extends ItemView {
     this.noticeEl.createSpan({ text: '已移动到 ' + move.to });
     action(this.noticeEl, '撤销移动', async () => {
       await this.plugin.deskMutation(() => undoMove(this.app, move));
+      await this.plugin.revertJourneyMove(move);
       this.plugin.lastDeskMove = null; this.plugin.refreshDesk(); new Notice('已移回 ' + move.from);
     });
   }
@@ -196,6 +305,8 @@ class DeskView extends ItemView {
       if (this.tab === 'inbox') for (const [key, label] of [['notes', '保留为笔记'], ['projects', '变成项目'], ['archive', '归档']]) {
         const move = action(buttons, label, async () => {
           this.plugin.lastDeskMove = await this.plugin.deskMutation(() => moveInboxNote(this.app, this.plugin.workflowSettings, file, key));
+          this.plugin.lastDeskMove.journeyDate = new Date();
+          await this.plugin.completeJourney('organize', { from: this.plugin.lastDeskMove.from, to: this.plugin.lastDeskMove.to }, this.plugin.lastDeskMove.journeyDate);
           this.plugin.refreshDesk();
         });
         move.setAttribute('title', '移动到 ' + this.plugin.workflowSettings[key] + '，可撤销');
@@ -218,7 +329,21 @@ function renderDeskSettings(root, plugin) {
     } catch (e) { status.setText(e.message); }
   }));
 }
-function installDesk(plugin, saved) {
+function installDesk(plugin, saved, savedJourney) {
+  plugin.journey = normalizeJourney(savedJourney);
+  plugin.completeJourney = async (kind, detail, date = new Date()) => {
+    const before = journeyStatus(plugin.journey, date).steps[kind];
+    try {
+      await plugin.updateSettings(current => ({ journey: recordJourney(current.journey, kind, detail, date) }));
+      if (!before && journeyStatus(plugin.journey, date).steps[kind]) plugin.lastJourneyAward = { kind, at: Date.now() };
+      return true;
+    } catch (e) { new Notice('笔记操作已完成，但本周进度未能保存：' + e.message, 6000); return false; }
+  };
+  plugin.revertJourneyMove = async move => {
+    const date = move.journeyDate || new Date();
+    try { await plugin.updateSettings(current => ({ journey: undoJourneyMove(current.journey, move, date) })); }
+    catch (e) { new Notice('笔记已移回，但本周进度未能保存：' + e.message, 6000); }
+  };
   try { plugin.workflowSettings = validateWorkflowSettings(saved || {}); }
   catch (_) { plugin.workflowSettings = { ...DEFAULT_WORKFLOW }; new Notice('工作台目录配置无效，已恢复默认值。请在设置中检查目录。'); }
   plugin.deskMutation = async fn => {

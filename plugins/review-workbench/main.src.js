@@ -118,10 +118,12 @@ async function createReviewNote(vault, folder, values, date = new Date()) {
 }
 function queueSettings(plugin, patch) {
   const save = async () => {
-    const next = { folder: plugin.settings.folder, workflow: plugin.workflowSettings, ...patch };
+    const current = { folder: plugin.settings.folder, workflow: plugin.workflowSettings, journey: plugin.journey };
+    const next = { ...current, ...(typeof patch === 'function' ? patch(current) : patch) };
     await plugin.saveData(next);
     plugin.settings = { folder: next.folder };
     plugin.workflowSettings = next.workflow;
+    plugin.journey = next.journey;
   };
   const result = (plugin.settingsSaveQueue || Promise.resolve()).then(save);
   plugin.settingsSaveQueue = result.catch(() => {});
@@ -435,7 +437,7 @@ module.exports = class ReviewWorkbench extends Plugin {
     this.settings = { ...DEFAULT_SETTINGS };
     const saved = await this.loadData();
     try { this.settings.folder = normalizeFolder(saved?.folder || DEFAULT_SETTINGS.folder); } catch (_) { new Notice('卡片目录配置无效，已使用默认目录。'); }
-    installDesk(this, saved?.workflow);
+    installDesk(this, saved?.workflow, saved?.journey);
     this.addSettingTab(new ReviewSettings(this.app, this));
     this.addCommand({ id: 'new-card', name: '新建回顾卡', callback: () => new CreateCardModal(this).open() });
     this.records = []; this.stats = summarize([], today()); this.loading = true; this.loadError = ''; this.refreshId = 0;

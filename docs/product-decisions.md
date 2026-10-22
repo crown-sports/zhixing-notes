@@ -31,3 +31,19 @@ QuickAdd [#337](https://github.com/chhoumann/quickadd/issues/337)已有实现和
 ## 下一轮验证的问题
 
 卡片自测目前不持久化“想起来了/还不熟”结果，练习输入也不保存。后续应先验证是否需要普通 Markdown 练习日志，再决定展示方式；不把它冒充为 Spaced Repetition 的排期记录。本轮先把日常整理流程做完整。
+
+## 0.3.0：灵感远征
+
+2026-10-23：把日常整理变成一张可走完的本周地图。场景负责吸引人，关卡仍对应真实笔记操作。
+
+| 参考 | 本次借鉴 |
+| --- | --- |
+| [Habitica](https://github.com/HabitRPG/habitica)，约 14.2k Star | 高 Star 成熟项目；借鉴场景层次、明确任务和完成反馈 |
+| [LifeUp](https://github.com/Ayagikei/LifeUp)，312 Star | 非高 Star，主应用闭源；借鉴个人目标与里程碑，不作为开源实现参考 |
+| [Gamified Tasks](https://github.com/dromse/obsidian-gamified-tasks/wiki/Getting-Started)，仓库 97 Star | 非高 Star；借鉴 Markdown 任务与可撤销的奖励 |
+
+- 本周三关：记下一条灵感、整理一篇笔记、留下一段回顾。每关一星，不强制顺序；重复操作不多得星。
+- 写入成功才完成；取消、空白和失败不计入。回顾必须保存自己的总结，生成或打开模板不算完成；撤销整理也撤销对应进度。
+- 浮岛地图突出当前行动，完成后给短暂反馈；专注模式收起场景，保留记录、整理和回顾入口。不加断签惩罚或按字数刷分。
+
+浮岛书房图由 ImageGen 为本项目原创生成，放在 `plugins/review-workbench/assets/quest-world.png`。只学结构，不拷素材；Habitica 的美术与代码采用[不同许可证](https://github.com/HabitRPG/habitica/blob/develop/LICENSE)。其[已关闭的历史问题 #8519](https://github.com/HabitRPG/habitica/issues/8519)也提醒我们：完成与撤销必须成对处理，避免反复勾选累积奖励。

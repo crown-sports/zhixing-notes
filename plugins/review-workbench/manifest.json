@@ -1,7 +1,7 @@
 {
   "id": "review-workbench",
   "name": "知行工作台",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "minAppVersion": "1.6.0",
   "description": "快速记录、整理收集箱、生成本周回顾，也能用卡片自测。笔记始终保存在本地。",
   "author": "crown",

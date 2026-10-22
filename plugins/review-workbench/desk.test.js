@@ -10,6 +10,7 @@ const context = { module: { exports: {} }, Date, console, setTimeout, clearTimeo
   window: { setInterval: () => 1 },
   require(name) {
     if (name === './workflow') return workflow;
+    if (name === './journey') return require('./journey');
     if (name === 'obsidian') return { ItemView, Modal: class {}, Notice: class {}, TFolder: class {} };
     throw new Error('Unexpected import: ' + name);
   }
@@ -101,6 +102,7 @@ function captureFixture(createCapture) {
   const captureContext = { module: { exports: {} }, Date, console,
     require(name) {
       if (name === './workflow') return { ...workflow, createCapture };
+      if (name === './journey') return require('./journey');
       if (name === 'obsidian') return { ItemView, Modal, Notice: class { constructor(text) { notices.push(text); } } };
       throw new Error('Unexpected import: ' + name);
     }
